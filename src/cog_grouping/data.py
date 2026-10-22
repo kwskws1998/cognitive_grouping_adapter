@@ -99,9 +99,34 @@ def stratified_indices(targets, validation_fraction, seed):
     return sorted(training), sorted(validation)
 
 
-def make_transforms(image_size, mean, std, training=False):
+class ParaXRandomResizedCrop(transforms.RandomResizedCrop):
+    """Match the pinned official crop's single area/aspect draw and clamping."""
+
+    @staticmethod
+    def get_params(img, scale, ratio):
+        """Use the same random draws and crop coordinates as the official code."""
+        width, height = img.size
+        area = height * width * torch.empty(1).uniform_(*scale).item()
+        log_ratio = torch.log(torch.tensor(ratio))
+        aspect = torch.exp(torch.empty(1).uniform_(log_ratio[0], log_ratio[1])).item()
+        crop_width = min(int(round(math.sqrt(area * aspect))), width)
+        crop_height = min(int(round(math.sqrt(area / aspect))), height)
+        top = torch.randint(0, height - crop_height + 1, size=(1,)).item()
+        left = torch.randint(0, width - crop_width + 1, size=(1,)).item()
+        return top, left, crop_height, crop_width
+
+
+def make_transforms(image_size, mean, std, training=False, protocol="pilot"):
     """Specify identical preprocessing for all locally compared adapter modes."""
-    if training:
+    if protocol == "parax":
+        if image_size != 224:
+            raise ValueError("the pinned ParaX preprocessing requires image_size=224")
+        spatial = ([ParaXRandomResizedCrop(224, interpolation=InterpolationMode.BICUBIC),
+                    transforms.RandomHorizontalFlip()] if training else
+                   [transforms.Resize(256, interpolation=InterpolationMode.BICUBIC), transforms.CenterCrop(224)])
+    elif protocol != "pilot":
+        raise ValueError("unknown preprocessing protocol")
+    elif training:
         spatial = [transforms.RandomResizedCrop(image_size, scale=(0.7, 1.0), interpolation=InterpolationMode.BICUBIC),
                    transforms.RandomHorizontalFlip()]
     else:
@@ -122,8 +147,10 @@ def make_datasets(config, normalization, include_test=False):
     """Construct training/validation only unless the caller explicitly requests test."""
     name = config["dataset"]
     image_size = config.get("image_size", 224)
-    train_transform = make_transforms(image_size, **normalization, training=name != "crowding")
-    evaluation_transform = make_transforms(image_size, **normalization)
+    protocol = config.get("preprocess", "pilot")
+    phase = config.get("phase", "development")
+    train_transform = make_transforms(image_size, **normalization, training=name != "crowding", protocol=protocol)
+    evaluation_transform = make_transforms(image_size, **normalization, protocol=protocol)
     seed = config.get("split_seed", 1729)
     test = None
     if name == "crowding":
@@ -138,7 +165,7 @@ def make_datasets(config, normalization, include_test=False):
         roles = {"kind": "independent procedural seeds", "train_seed": seed,
                  "validation_seed": seed + 100000000, "test_seed": seed + 200000000}
         num_classes = 2
-    elif name in ("cifar100", "food101"):
+    elif name in ("cifar100", "svhn", "food101", "imagenet-r"):
         root = config.get("data_root", "data")
         download = config.get("download", False)
         if name == "cifar100":
@@ -146,19 +173,63 @@ def make_datasets(config, normalization, include_test=False):
             targets = raw.targets
             dataset_type = lambda transform: datasets.CIFAR100(root, train=True, transform=transform, download=False)
             test_type = lambda: datasets.CIFAR100(root, train=False, transform=evaluation_transform, download=download)
-        else:
+        elif name == "svhn":
+            raw = datasets.SVHN(root, split="train", download=download)
+            targets = raw.labels
+            dataset_type = lambda transform: datasets.SVHN(root, split="train", transform=transform, download=False)
+            test_type = lambda: datasets.SVHN(root, split="test", transform=evaluation_transform, download=download)
+        elif name == "food101":
             raw = datasets.Food101(root, split="train", download=download)
             targets = raw._labels
             dataset_type = lambda transform: datasets.Food101(root, split="train", transform=transform, download=False)
             test_type = lambda: datasets.Food101(root, split="test", transform=evaluation_transform, download=download)
-        train_indices, val_indices = stratified_indices(targets, config.get("validation_fraction", 0.1), seed)
+        else:
+            root = Path(root)
+            evidence = root / "split_provenance.json"
+            if not evidence.is_file():
+                raise FileNotFoundError("ImageNet-R requires split_provenance.json identifying the source of the supplied 24000/6000 reference split")
+            split_evidence = json.loads(evidence.read_text())
+            if not split_evidence.get("source"):
+                raise ValueError("ImageNet-R split provenance must identify its source")
+            raw = datasets.ImageFolder(root / "train")
+            if len(raw) != 24000 or len(raw.classes) != 200:
+                raise ValueError("ImageNet-R requires the supplied official 24000-image, 200-class train split; no random split is generated")
+            targets = raw.targets
+            dataset_type = lambda transform: datasets.ImageFolder(root / "train", transform=transform)
+            test_type = lambda: datasets.ImageFolder(root / "test", transform=evaluation_transform)
+        if phase == "confirmation":
+            if config.get("validation_fraction", 0) != 0:
+                raise ValueError("confirmation must use the full official training pool")
+            train_indices, val_indices = list(range(len(targets))), []
+        else:
+            train_indices, val_indices = stratified_indices(targets, config.get("validation_fraction", 0.1), seed)
         training = Subset(dataset_type(train_transform), train_indices)
-        validation = Subset(dataset_type(evaluation_transform), val_indices)
+        validation = Subset(dataset_type(evaluation_transform), val_indices) if val_indices else None
         test = test_type() if include_test else None
-        roles = {"kind": "official training-pool stratification", "seed": seed,
+        roles = {"kind": "official full training pool" if phase == "confirmation" else "official training-pool stratification",
+                 "phase": phase, "seed": seed,
                  "train_indices": train_indices, "validation_indices": val_indices,
                  "test_role": "official held-out test; never used for selection"}
-        num_classes = len(raw.classes)
+        num_classes = 10 if name == "svhn" else len(raw.classes)
+        if config.get("benchmark_protocol"):
+            expected_train = {"cifar100": 50000, "svhn": 73257, "food101": 75750, "imagenet-r": 24000}[name]
+            expected_classes = {"cifar100": 100, "svhn": 10, "food101": 101, "imagenet-r": 200}[name]
+            if len(raw) != expected_train or num_classes != expected_classes:
+                raise ValueError("benchmark training pool has unexpected sample/class counts")
+            if test is not None and len(test) != {"cifar100": 10000, "svhn": 26032, "food101": 25250, "imagenet-r": 6000}[name]:
+                raise ValueError("benchmark test pool has an unexpected sample count")
+        if name == "imagenet-r":
+            roles["split_provenance"] = split_evidence
+            roles["split_identity_verified_by_publisher_digest"] = False
+            roles["class_to_idx"] = raw.class_to_idx
+            roles["train_files"] = [{"path": str(Path(path).relative_to(root)), "sha256": file_sha256(path)}
+                                    for path, _ in raw.samples]
+            if test is not None:
+                if len(test) != 6000 or test.class_to_idx != raw.class_to_idx:
+                    raise ValueError("ImageNet-R requires the supplied official 6000-image test split with matching classes")
+                train_hashes = {entry["sha256"] for entry in roles["train_files"]}
+                if train_hashes & {file_sha256(path) for path, _ in test.samples}:
+                    raise ValueError("identical ImageNet-R content appears in train and test")
     elif name == "imagefolder":
         root = Path(config["data_root"])
         training = datasets.ImageFolder(root / "train", transform=train_transform)
@@ -181,13 +252,14 @@ def make_datasets(config, normalization, include_test=False):
                  "validation_files": [{"path": str(Path(path).relative_to(root)), "sha256": val_hashes[path]} for path, _ in validation.samples]}
         num_classes = len(training.classes)
     else:
-        raise ValueError("dataset must be crowding, cifar100, food101 or imagefolder")
+        raise ValueError("dataset must be crowding, cifar100, svhn, food101, imagenet-r or imagefolder")
     payload = json.dumps(roles, sort_keys=True).encode()
     roles["sha256"] = hashlib.sha256(payload).hexdigest()
     training = _subset_limit(training, config.get("max_train_samples"))
-    validation = _subset_limit(validation, config.get("max_val_samples"))
+    if validation is not None:
+        validation = _subset_limit(validation, config.get("max_val_samples"))
     if test is not None:
         test = _subset_limit(test, config.get("max_test_samples"))
-    roles["effective_sizes"] = {"train": len(training), "validation": len(validation),
+    roles["effective_sizes"] = {"train": len(training), "validation": len(validation) if validation is not None else None,
                                 "test": len(test) if test is not None else None}
     return training, validation, test, num_classes, roles

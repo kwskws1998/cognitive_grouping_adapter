@@ -56,7 +56,9 @@ class CliProtocolTests(unittest.TestCase):
             self.assertEqual(len(interventions["observations"]), 9)
             summary = ["scripts/summarize.py", "--runs", str(continuous), str(resumed),
                        "--output", str(temporary / "summary.json")]
-            self.command(summary)
+            self.command(summary, expect_success=False)
+            self.command(["scripts/summarize.py", "--runs", str(resumed),
+                          "--output", str(temporary / "summary.json")])
             manifest_path = continuous / "manifest.json"
             manifest = json.loads(manifest_path.read_text())
             manifest["config"]["max_train_samples"] = 4

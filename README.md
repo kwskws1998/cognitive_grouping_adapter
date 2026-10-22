@@ -1,95 +1,98 @@
 # Cognitive Grouping Adapter
 
-Research implementation of candidate 1: **preserve item-specific evidence while representing perceptual groups**, attached as one module to a frozen pretrained image encoder.
+A spatial evidence adapter after a frozen pretrained image encoder, with matched local controls and full official ParaX. Primary experiments now use real image benchmarks; synthetic crowding is an auxiliary diagnostic.
 
-This repository contains a working PyTorch operator, pretrained ResNet/MAE-ViT integration, matched controls, a pinned official ParaX baseline bridge, training/evaluation scripts, and numerical/protocol tests. It does not establish a recognition improvement or CVPR-level novelty. CUDA memory must be measured on the target GPU.
+## 1. Conda setup
 
-## 1. Set up
-
-Run commands from this directory. Python 3.11 is recommended for a new Linux environment. The source also supports the Python 3.9 environment used for local verification.
+Run from the project root (`/workspace/cognitive_grouping_adapter` on the GPU server).
 
 ```text
+conda env create -f environment.yml
+conda activate cognitive_grouping
 python scripts/setup_env.py --torch-index-url https://download.pytorch.org/whl/cu128
-.venv/bin/python scripts/check.py
+python -c 'import torch; assert torch.cuda.is_available(); assert torch.cuda.is_bf16_supported(); print(torch.__version__, torch.cuda.get_device_name(0))'
 ```
 
-The setup creates a local `.venv`, installs PyTorch 2.8.0, torchvision 0.23.0, timm 1.0.22 and baseline dependencies, and records resolved versions. No shell scripts are generated. For CPU/macOS, omit `--torch-index-url`. An existing environment is never overwritten.
+Create the environment once and activate it on later sessions. Setup validates the active conda interpreter before installing PyTorch 2.8.0, torchvision 0.23.0, timm 1.0.22 and baseline dependencies. For CPU/macOS, omit the torch index argument. Resolved packages are recorded in `environment.resolved.txt`. CuBLAS workspace configuration is set before importing PyTorch, and unsupported deterministic operations raise errors.
 
-## 2. Inspect the mechanism before training
+## 2. Weights and tests
 
 ```text
-.venv/bin/python scripts/probe.py
+python scripts/fetch_weights.py
+python scripts/fetch_references.py --parax
+python scripts/check.py --report reports/current_tests.json
+python scripts/audit.py
 ```
 
-Inspect `runs/mechanism_probe/probe.json` and `private_fraction.png`. This is a constructed-feature diagnostic, not a human-data fit or a classification benchmark. The exact computation and its differences from the source model are in `docs/METHOD.md`.
+Official code is pinned and hashed. Launcher text is archived in JSON; no shell launcher is created or executed. Exact paper excerpts and source differences are documented in `docs/BENCHMARK_PROTOCOL.md`.
 
-## 3. Verify a pretrained integration
+## 3. Real benchmark data
 
 ```text
-.venv/bin/python scripts/smoke.py --backbone resnet18
-.venv/bin/python scripts/fetch_weights.py
-.venv/bin/python scripts/smoke.py --backbone vit_base_patch16_224.mae --weights-path checkpoints/mae_pretrain_vit_base.pth --image-size 224 --output runs/pretrained_mae_smoke.json
+python scripts/prepare_data.py --config configs/benchmark/cifar100.json --cifar100-mirror-url https://dataset.bj.bcebos.com/cifar/cifar-100-python.tar.gz
+python scripts/prepare_data.py --config configs/benchmark/svhn.json
+python scripts/prepare_data.py --config configs/benchmark/food101.json
 ```
 
-The smoke uses synthetic labels. It checks finite optimization, adapter updates, the absence of encoder gradients, evaluation-mode normalization, and exact frozen-weight retention. It does not measure recognition quality. Pretrained loading failures are raised; random-backbone runs require an explicit smoke override.
+The CIFAR mirror is optional; torchvision enforces the official archive MD5. Preparation validates training-pool/class counts and records a stratified validation split from the training pool. It never constructs final-test datasets, even when downloaded archives contain test files.
 
-## 4. Measure the 24GB configuration
+ImageNet-R uses `configs/benchmark/imagenet-r.json`. Supply `data/imagenet-r/train` and `test` with the reference 24,000/6,000 images and 200 matching classes, plus `split_provenance.json` containing a `source` URL or reference identifier. No new random split is generated. Paths/hashes are recorded and final evaluation checks content overlap; the supplied split identity has no publisher-verified digest.
+
+## 4. Real-image integration and memory
 
 ```text
-.venv/bin/python scripts/profile_cuda.py --config configs/cifar100_vit_24gb.json --output runs/grouping_memory.json
-.venv/bin/python scripts/fetch_references.py --parax
-.venv/bin/python scripts/profile_cuda.py --config configs/cifar100_parax_24gb.json --output runs/parax_memory.json
+python scripts/validate_benchmark.py --output runs/realdata_check_v1 --device cuda --precision bf16
+python scripts/smoke_official.py --config configs/benchmark/reference/cifar100.json --device cuda --output runs/parax_reference_smoke.json
+python scripts/profile_cuda.py --config configs/benchmark/cifar100.json --output runs/grouping_memory_v1.json
+python scripts/profile_cuda.py --config configs/benchmark/cifar100.json --mode official_parax --output runs/parax_memory_v1.json
+python scripts/profile_cuda.py --config configs/benchmark/reference/cifar100.json --output runs/parax_reference_memory_v1.json
 ```
 
-The classifier starts at 224x224 with microbatch 8. The profile measures warm optimizer-state memory as well as forward/backward. A CUDA-unavailable report is explicitly not a memory measurement. Our single post-backbone adapter runs the entire encoder under `no_grad`; full distributed ParaX requires gradients through frozen operations between its trainable blocks and can use more activation memory.
+The real-image check trains grouping and full ParaX on 16 actual training images for two epochs and evaluates eight validation images. It verifies finite updates, frozen weights and saved evaluation, not benchmark performance. Profiling includes optimizer-state warmup. Physical batch 8 with accumulation 128 gives nominal effective batch 1024. Measure target-GPU memory before full training. Reference BatchNorm still uses the physical batch; accumulation does not reproduce per-device batch-256 statistics.
 
-## 5. Run a matched pilot
+## 5. Development comparisons
+
+Start with CIFAR-100 and seed 42:
 
 ```text
-.venv/bin/python scripts/run_controls.py --config configs/cifar100_vit_24gb.json --output runs/cifar100_controls --seeds 42
-.venv/bin/python scripts/train.py --config configs/cifar100_parax_24gb.json --output runs/cifar100_parax_seed42
+python scripts/run_benchmarks.py --datasets cifar100 --seeds 42
+python scripts/summarize_benchmarks.py --root runs/benchmark_v1/matched/development
 ```
 
-The local modes are `linear`, `mlp`, `spatial`, `boundary`, `grouping`, `fixed_split`, `no_unique`, and `fixed_width`. Every non-linear local control has exactly the same learned projection shapes and parameter budget. ParaX retains its full 12-block official architecture, with a larger separately reported adapter budget. See `docs/BASELINES.md` before interpreting any comparison.
+This sequentially runs `linear`, `mlp`, `spatial`, `boundary`, `grouping`, `fixed_split`, `no_unique`, `fixed_width`, and full official ParaX. Matched conditions share preprocessing, data, head initialization, SGD, 100 epochs, 20 warmup epochs, absolute LR 0.1, effective batch 1024 and BF16. Nonlinear local controls have identical projection shapes and budgets. ParaX retains all distributed blocks, rank 128 and convolution kernels 3/5/7; its larger budget is reported separately.
 
-The CIFAR-100 pilot uses a stratified validation subset of the official training pool. Training never constructs the official test dataset. This 30-epoch AdamW pilot is not a reproduction of the ParaX paper's 100-epoch protocol. Use the same recipe for all compared methods, and tune each method using only validation data before making a performance claim.
-
-For the specific cognitive prediction, train an orientation head with the sparse diagnostic configuration and evaluate unseen dense arrangements:
+Give every method an equal validation-only LR search, retaining completed pilot conditions:
 
 ```text
-.venv/bin/python scripts/train.py --config configs/crowding_vit_24gb.json --output runs/crowding_grouping_seed42
-.venv/bin/python scripts/evaluate_crowding.py --run runs/crowding_grouping_seed42 --output runs/crowding_interventions.json --device cuda --precision bf16
+python scripts/run_benchmarks.py --datasets cifar100 --seeds 42 --learning-rates 0.03 0.1 0.3 --resume
 ```
 
-This intervention report defaults to development seeds. Freeze all choices before adding `--allow-final-diagnostic` for the separate final diagnostic seed pool. It records paired trial predictions rather than only a pooled accuracy.
+Use `--datasets cifar100 svhn food101` for all automatic datasets, and add `imagenet-r` when prepared. `--dry-run` prints resolved conditions. `--resume` checks source/config identity, skips complete runs and resumes interrupted ones. `--epochs-this-invocation 1` stops each condition after one epoch without changing its 100-epoch schedule.
 
-## 6. Resume and final evaluation
+## 6. Reference ParaX strength check
 
 ```text
-.venv/bin/python scripts/train.py --config configs/cifar100_vit_24gb.json --output runs/cifar100_grouping_seed42 --epochs-this-invocation 1
-.venv/bin/python scripts/train.py --config configs/cifar100_vit_24gb.json --output runs/cifar100_grouping_seed42 --resume
-.venv/bin/python scripts/evaluate.py --run runs/cifar100_grouping_seed42 --split validation --device cuda --precision bf16
-.venv/bin/python scripts/evaluate.py --run runs/cifar100_grouping_seed42 --split test --allow-test --device cuda --precision bf16 --predictions
+python scripts/run_benchmarks.py --recipe reference --datasets cifar100 --learning-rates 0.1 0.4 --seeds 42
 ```
 
-`last.pt` is resumable; `best.pt` is chosen using validation accuracy only. Configurations, source hashes, encoder hashes, data roles, RNG states and parameter counts are recorded. Epoch-boundary resume is tested against uninterrupted training. Existing runs are not overwritten, and training cannot resume after explicit final-test access.
+Reference uses the official CLS + BatchNorm readout, FP32, convolution paths, SGD and stochastic-layer behavior. The source launcher scales `blr=0.1` to actual LR 0.4 at effective batch 1024; the paper states initial LR 0.1. Food-101 retains source drop-path 0.05. Physical batch, accumulation, validation partition and final-test policy differ from the original multi-GPU execution. Keep this single-GPU reference check separate from matched comparisons and published table scores.
 
-## Implementation stages
+## 7. Freeze, confirm, then evaluate final test
 
-1. Numerical operator and controlled feature probes.
-2. Single-module integration with a frozen pretrained encoder.
-3. Correct training/checkpoint/data-role handling and matched controls.
-4. Full official ParaX architecture in the harmonized harness.
-5. Target-GPU memory profiling and real-image multi-seed experiments.
-
-Stages 1-4 concern implementation and code-path validation. Stage 5 requires actual GPU and real-data evidence. `reports/VALIDATION.md` records what was really run.
-
-Paper evidence and exact excerpts are in `docs/SOURCES.md`. The source-derived model, proposed 2D extension, and empirical claims are kept separate.
-
-The ordered experiment gates and stopping criteria are in `docs/EXPERIMENTS.md`. To compare completed matched runs:
+After development candidates finish:
 
 ```text
-.venv/bin/python scripts/summarize.py --runs runs/cifar100_controls/grouping_seed42 runs/cifar100_controls/boundary_seed42 --output runs/matched_validation.json
+python scripts/freeze_benchmarks.py --root runs/benchmark_v1/matched/development --output runs/benchmark_v1/matched/frozen_plan.json
+python scripts/run_benchmarks.py --phase confirmation --frozen-plan runs/benchmark_v1/matched/frozen_plan.json --seeds 42 43 44
+python scripts/summarize_benchmarks.py --root runs/benchmark_v1/matched/confirmation --allow-test
 ```
 
-The delivered macOS environment uses system site packages for the already installed PyTorch runtime; it is not an isolated Linux/CUDA reproduction. A new Linux environment should use the setup command above.
+Each method selects its own LR by mean validation accuracy, breaking ties by NLL. Freezing rejects unequal search budgets, incomplete candidates, changed source and prior final-test access. Confirmation trains on the complete official training pool for the fixed epoch count; its checkpoint is the final epoch. Test evaluation is explicit and training cannot resume afterward. Freeze/reference confirmation can be performed separately on the `reference/development` root.
+
+Reports include top-1/top-5 accuracy, NLL, seed mean/std, parameters, optimizer steps, training time, measured GPU memory and source/encoder hashes. No published scores are mixed with observed results.
+
+## Historical diagnostics
+
+The existing crowding scripts remain for mechanism diagnostics. Sparse validation accuracy at ceiling cannot establish grouping benefits. Legacy 15-epoch crowding and 30-epoch CIFAR configurations remain historical pilots. New runs use `runs/benchmark_v1`; evaluate older checkpoints using their matching source snapshot.
+
+Current evidence is in `reports/CONDA_BENCHMARK_VALIDATION.md`; original macOS evidence remains in `reports/VALIDATION.md`.

@@ -1,0 +1,53 @@
+{
+  "backbone": "vit_base_patch16_224.mae",
+  "pretrained": true,
+  "weights_path": "checkpoints/mae_pretrain_vit_base.pth",
+  "mode": "official_parax",
+  "bottleneck": 64,
+  "grouping": {
+    "radius": 2,
+    "min_width": 0.2,
+    "max_width": 1.25,
+    "similarity_temperature": 0.7
+  },
+  "dataset": "imagenet-r",
+  "data_root": "data/imagenet-r",
+  "download": false,
+  "image_size": 224,
+  "preprocess": "parax",
+  "phase": "development",
+  "validation_fraction": 0.1,
+  "split_seed": 1729,
+  "batch_size": 8,
+  "accumulation_steps": 128,
+  "epochs": 100,
+  "warmup_epochs": 20,
+  "learning_rate": 0.4,
+  "min_lr": 0.0,
+  "weight_decay": 0.0,
+  "optimizer": "sgd",
+  "momentum": 0.9,
+  "nesterov": false,
+  "schedule": "parax_iteration",
+  "max_grad_norm": null,
+  "drop_last": true,
+  "workers": 4,
+  "threads": 4,
+  "precision": "fp32",
+  "device": "cuda",
+  "seed": 42,
+  "benchmark_protocol": "parax_reference_single_gpu_v1",
+  "parax": {
+    "rank": 128,
+    "enable_conv": true,
+    "kernel_sizes": [
+      3,
+      5,
+      7
+    ],
+    "router_hidden": 16,
+    "drop_path": 0.0,
+    "readout": "official_cls_bn",
+    "train_stochastic": true
+  }
+}

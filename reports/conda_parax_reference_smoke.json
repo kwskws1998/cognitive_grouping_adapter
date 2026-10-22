@@ -1,0 +1,52 @@
+{
+  "checks": {
+    "expert_parameters_changed": true,
+    "finite_gradients": true,
+    "frozen_core_unchanged": true,
+    "full_12_block_layout_retained": true
+  },
+  "classification_efficacy_established": false,
+  "environment": {
+    "conda_prefix": "/private/tmp/cognitive_grouping_conda",
+    "cublas_workspace_config": ":4096:8",
+    "cuda_available": false,
+    "cuda_runtime": null,
+    "deterministic_algorithms": true,
+    "deterministic_warn_only": false,
+    "gpu": null,
+    "packages": {
+      "Pillow": "11.3.0",
+      "numpy": "2.4.6",
+      "timm": "1.0.22",
+      "torch": "2.8.0",
+      "torchvision": "0.23.0"
+    },
+    "platform": "macOS-15.5-arm64-arm-64bit",
+    "python": "3.11.17",
+    "python_executable": "/private/tmp/cognitive_grouping_conda/bin/python"
+  },
+  "loss": 1.00300931930542,
+  "parameters": {
+    "adapter_trainable": 3098340,
+    "backbone_total": 85798656,
+    "backbone_trainable": 0,
+    "head_trainable": 2307
+  },
+  "parax_options": {
+    "drop_path": 0.0,
+    "enable_conv": true,
+    "kernel_sizes": [
+      3,
+      5,
+      7
+    ],
+    "rank": 128,
+    "readout": "official_cls_bn",
+    "router_hidden": 16,
+    "train_stochastic": true
+  },
+  "protocol": "parax_reference_single_gpu_v1",
+  "published_score_reproduced": false,
+  "readout": "official_cls_bn",
+  "vendor_revision": "a1c4aa049b1d859db287535f3597b113ed01a2a4"
+}

@@ -56,11 +56,17 @@ def build_classifier(backbone, num_classes, config, project_root):
     """Keep local post-backbone controls separate from the full official ParaX model."""
     if config.get("mode") == "official_parax":
         from .official_baseline import OfficialParaXClassifier
-        model = OfficialParaXClassifier(backbone, num_classes, config.get("bottleneck", 192), project_root)
+        options = config.get("parax", {})
+        model = OfficialParaXClassifier(backbone, num_classes, options.get("rank", config.get("bottleneck", 192)),
+                                        project_root, options)
     else:
         model = FrozenVisionClassifier(backbone, num_classes, config.get("mode", "grouping"),
                                        config.get("bottleneck", 64), GroupingConfig(**config.get("grouping", {})))
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(config.get("seed", 42) + 1000003)
-        model.head.reset_parameters()
+        if isinstance(model.head, nn.Sequential):
+            model.head[-1].reset_parameters()
+            nn.init.trunc_normal_(model.head[-1].weight, std=0.01)
+        else:
+            model.head.reset_parameters()
     return model

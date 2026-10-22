@@ -1,8 +1,8 @@
-"""Full distributed official ParaX architecture in a harmonized pilot harness.
+"""Full official ParaX architecture with matched and reference classification heads.
 
 The vendor files are unmodified Apache-2.0 sources. The checkpoint translation
-and patch-mean readout below are ours and are explicitly not the paper's full
-training/readout protocol. The baseline retains every official ParaX block.
+and optional matched patch-mean readout are project integration code. Reference
+mode retains the vendor CLS/BatchNorm readout. Every official block is retained.
 """
 
 import importlib
@@ -60,9 +60,9 @@ def translate_timm_encoder(state):
 
 
 class OfficialParaXClassifier(nn.Module):
-    """Train official ParaX modules across all blocks and a matched linear readout."""
+    """Train official ParaX modules across all blocks with a selectable readout."""
 
-    def __init__(self, backbone, num_classes, rank, project_root):
+    def __init__(self, backbone, num_classes, rank, project_root, options=None):
         """Load every frozen pretrained weight with strict missing-key allowlists."""
         super().__init__()
         if not hasattr(backbone, "encoder") or not hasattr(backbone.encoder, "blocks"):
@@ -73,8 +73,14 @@ class OfficialParaXClassifier(nn.Module):
         if tuple(source.patch_embed.patch_size) != (16, 16):
             raise ValueError("official baseline requires 16x16 patches")
         vendor = load_vendor(project_root)
+        options = options or {}
+        self.readout = options.get("readout", "matched")
+        self.train_stochastic = options.get("train_stochastic", False)
         self.encoder = vendor.vit_base_patch16_parax(num_classes=0, global_pool=False, parax_rank=rank,
-                                                    parax_enable_conv=False, drop_path_rate=0.0)
+                                                    parax_enable_conv=options.get("enable_conv", False),
+                                                    parax_kernel_sizes=options.get("kernel_sizes"),
+                                                    parax_router_hidden=options.get("router_hidden", 16),
+                                                    drop_path_rate=options.get("drop_path", 0.0))
         translated = translate_timm_encoder(source.state_dict())
         incompatible = self.encoder.load_state_dict(translated, strict=False)
         missing = [name for name in incompatible.missing_keys if ".adapter." not in name and not name.startswith("peft_params.")]
@@ -82,27 +88,30 @@ class OfficialParaXClassifier(nn.Module):
             raise ValueError("unsafe pretrained conversion: " + str((missing, incompatible.unexpected_keys)))
         for name, parameter in self.encoder.named_parameters():
             parameter.requires_grad_(".adapter." in name or name.startswith("peft_params."))
-        self.head = nn.Linear(768, num_classes)
+        self.head = (nn.Sequential(nn.BatchNorm1d(768, affine=False, eps=1e-6), nn.Linear(768, num_classes))
+                     if self.readout == "official_cls_bn" else nn.Linear(768, num_classes))
         self.mode = "official_parax"
         self.vendor_revision = PARAX_REVISION
 
     def train(self, mode=True):
-        """Keep frozen stochastic layers in eval while allowing adapters to train."""
+        """Select source stochastic behavior or deterministic matched-core behavior."""
         super().train(mode)
-        self.encoder.eval()
+        self.encoder.train(mode if self.train_stochastic else False)
         for block in self.encoder.blocks:
             block.adapter.train(mode)
         return self
 
     def forward(self, images):
-        """Retain all official distributed adapters, then match the patch-mean head."""
+        """Retain distributed adapters and apply the configured classification head."""
         encoder = self.encoder
         tokens = encoder.patch_embed(images)
         tokens = torch.cat((encoder.cls_token.expand(images.shape[0], -1, -1), tokens), dim=1)
         tokens = encoder.pos_drop(tokens + encoder.pos_embed)
         for block in encoder.blocks:
             tokens = block(tokens, params=encoder.peft_params)
-        return self.head(encoder.norm(tokens)[:, 1:].mean(1))
+        tokens = encoder.norm(tokens)
+        features = tokens[:, 0] if self.readout == "official_cls_bn" else tokens[:, 1:].mean(1)
+        return self.head(features)
 
     def trainable_parameter_counts(self):
         """Count the actual loaded baseline, rather than copying a paper's budget."""

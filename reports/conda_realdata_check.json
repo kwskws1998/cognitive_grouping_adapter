@@ -1,0 +1,92 @@
+{
+  "classification_efficacy_established": false,
+  "dataset": "cifar100",
+  "environment": {
+    "conda_prefix": "/private/tmp/cognitive_grouping_conda",
+    "cublas_workspace_config": ":4096:8",
+    "cuda_available": false,
+    "cuda_runtime": null,
+    "deterministic_algorithms": false,
+    "deterministic_warn_only": false,
+    "gpu": null,
+    "packages": {
+      "Pillow": "11.3.0",
+      "numpy": "2.4.6",
+      "timm": "1.0.22",
+      "torch": "2.8.0",
+      "torchvision": "0.23.0"
+    },
+    "platform": "macOS-15.5-arm64-arm-64bit",
+    "python": "3.11.17",
+    "python_executable": "/private/tmp/cognitive_grouping_conda/bin/python"
+  },
+  "pretrained": true,
+  "real_images": true,
+  "rows": [
+    {
+      "mode": "grouping",
+      "run": "/Users/wansookim/Documents/cognitive_grouping_adapter/runs/conda_realdata_check_v2/grouping",
+      "status": {
+        "backbone_unchanged": true,
+        "best_validation_accuracy": 0.0,
+        "complete": true,
+        "completed_epochs": 2,
+        "efficacy_established": false,
+        "planned_epochs": 2,
+        "selected_epoch": 0,
+        "test_accessed": false
+      },
+      "validation": {
+        "accuracy": 0.0,
+        "backbone_sha256": "484398a5904e4aa847b3c2f7a50a46e42cbdf20f0bc2979d18cd389eef6634fe",
+        "checkpoint_sha256": "0132f936aacd5a70569b9ad17a50f995735ec37b75bdba13096feadd833d82d0",
+        "nll": 6.817436456680298,
+        "samples": 8,
+        "selected_epoch": 0,
+        "source_sha256": "33030a7f1afd8f066da07e691bc82b02d7c500fea4aa02727cec1d7deaec8c74",
+        "split": "validation",
+        "top5_accuracy": 0.0
+      },
+      "parameters": {
+        "adapter_trainable": 198976,
+        "backbone_total": 85798656,
+        "backbone_trainable": 0,
+        "head_trainable": 76900
+      },
+      "split_sha256": "f60796e38cbec029dd465bf51a3e4f96c143150ad3635b77f91386904fd17bdf"
+    },
+    {
+      "mode": "official_parax",
+      "run": "/Users/wansookim/Documents/cognitive_grouping_adapter/runs/conda_realdata_check_v2/official_parax",
+      "status": {
+        "backbone_unchanged": true,
+        "best_validation_accuracy": 0.125,
+        "complete": true,
+        "completed_epochs": 2,
+        "efficacy_established": false,
+        "planned_epochs": 2,
+        "selected_epoch": 1,
+        "test_accessed": false
+      },
+      "validation": {
+        "accuracy": 0.125,
+        "backbone_sha256": "484398a5904e4aa847b3c2f7a50a46e42cbdf20f0bc2979d18cd389eef6634fe",
+        "checkpoint_sha256": "2b13fa53d30d00117a24af1ba0ee2e38a5d79d651442cbf5bd81bf1c003e1b84",
+        "nll": 5.465164065361023,
+        "samples": 8,
+        "selected_epoch": 1,
+        "source_sha256": "33030a7f1afd8f066da07e691bc82b02d7c500fea4aa02727cec1d7deaec8c74",
+        "split": "validation",
+        "top5_accuracy": 0.125
+      },
+      "parameters": {
+        "adapter_trainable": 3098340,
+        "backbone_total": 85798656,
+        "backbone_trainable": 0,
+        "head_trainable": 76900
+      },
+      "split_sha256": "f60796e38cbec029dd465bf51a3e4f96c143150ad3635b77f91386904fd17bdf"
+    }
+  ],
+  "source_sha256": "33030a7f1afd8f066da07e691bc82b02d7c500fea4aa02727cec1d7deaec8c74"
+}

@@ -7,3 +7,5 @@
 항상 꼼꼼하게 코드 생성하고 검토하고 하셈.
 
 Use Python scripts for automation. Do not create `.sh` files.
+
+Use conda environments only. Install and run with the active conda environment's `python`. Do not create venv or uv environments.

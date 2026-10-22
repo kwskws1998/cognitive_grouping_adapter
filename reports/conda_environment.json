@@ -1,0 +1,19 @@
+{
+  "python": "3.11.17",
+  "platform": "macOS-15.5-arm64-arm-64bit",
+  "python_executable": "/private/tmp/cognitive_grouping_conda/bin/python",
+  "conda_prefix": "/private/tmp/cognitive_grouping_conda",
+  "cublas_workspace_config": ":4096:8",
+  "deterministic_algorithms": false,
+  "deterministic_warn_only": false,
+  "packages": {
+    "torch": "2.8.0",
+    "torchvision": "0.23.0",
+    "timm": "1.0.22",
+    "numpy": "2.4.6",
+    "Pillow": "11.3.0"
+  },
+  "cuda_available": false,
+  "cuda_runtime": null,
+  "gpu": null
+}

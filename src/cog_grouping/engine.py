@@ -25,7 +25,7 @@ def precision_context(device, precision):
 def evaluate(model, loader, device, precision="fp32", return_predictions=False):
     """Compute sample-weighted accuracy and NLL without selecting a checkpoint."""
     model.eval()
-    total_loss, correct, samples = 0.0, 0, 0
+    total_loss, correct, top5_correct, samples = 0.0, 0, 0, 0
     predictions = []
     for images, labels in loader:
         images, labels = images.to(device), labels.to(device)
@@ -37,6 +37,7 @@ def evaluate(model, loader, device, precision="fp32", return_predictions=False):
         total_loss += float(F.cross_entropy(logits, labels, reduction="sum"))
         predicted = logits.argmax(1)
         correct += int((predicted == labels).sum())
+        top5_correct += int((logits.topk(min(5, logits.shape[1]), dim=1).indices == labels[:, None]).any(1).sum())
         samples += labels.numel()
         if return_predictions:
             for truth, guess, probabilities in zip(labels.cpu(), predicted.cpu(), logits.softmax(1).cpu()):
@@ -44,14 +45,15 @@ def evaluate(model, loader, device, precision="fp32", return_predictions=False):
                                     "probabilities": probabilities.tolist()})
     if samples == 0:
         raise ValueError("evaluation loader is empty")
-    result = {"accuracy": correct / samples, "nll": total_loss / samples, "samples": samples}
+    result = {"accuracy": correct / samples, "top5_accuracy": top5_correct / samples,
+              "nll": total_loss / samples, "samples": samples}
     if return_predictions:
         result["predictions"] = predictions
     return result
 
 
 def train_epoch(model, loader, optimizer, device, precision="fp32", accumulation_steps=1,
-                scaler=None, max_grad_norm=1.0):
+                scaler=None, max_grad_norm=1.0, schedule=None):
     """Match the sample-mean gradient even for short batches and tail accumulation."""
     if accumulation_steps < 1:
         raise ValueError("accumulation_steps must be positive")
@@ -65,6 +67,10 @@ def train_epoch(model, loader, optimizer, device, precision="fp32", accumulation
     trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
     nominal_samples = accumulation_steps * loader.batch_size
     for batch_index, (images, labels) in enumerate(loader):
+        if schedule is not None and batch_index % accumulation_steps == 0:
+            lr = schedule(batch_index / len(loader))
+            for group in optimizer.param_groups:
+                group["lr"] = lr
         images, labels = images.to(device), labels.to(device)
         with precision_context(device, precision):
             logits = model(images)
@@ -104,10 +110,33 @@ def train_epoch(model, loader, optimizer, device, precision="fp32", accumulation
             group_samples = 0
     if samples == 0:
         raise ValueError("training loader is empty")
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
     peak = torch.cuda.max_memory_allocated(device) if device.type == "cuda" else None
     return {"accuracy": correct / samples, "nll": total_loss / samples, "samples": samples,
             "optimizer_steps": steps, "skipped_updates": skipped,
-            "seconds": time.perf_counter() - start, "peak_cuda_allocated_bytes": peak}
+            "seconds": time.perf_counter() - start, "peak_cuda_allocated_bytes": peak,
+            "peak_cuda_reserved_bytes": torch.cuda.max_memory_reserved(device) if device.type == "cuda" else None}
+
+
+def make_optimizer(model, config):
+    """Use identical explicit optimizer settings for training and memory profiling."""
+    parameters = [parameter for parameter in model.parameters() if parameter.requires_grad]
+    kwargs = {"lr": config.get("learning_rate", 1e-3), "weight_decay": config.get("weight_decay", 0.01)}
+    if config.get("optimizer", "adamw") == "sgd":
+        return torch.optim.SGD(parameters, momentum=config.get("momentum", 0.9),
+                               nesterov=config.get("nesterov", False), **kwargs)
+    if config.get("optimizer", "adamw") != "adamw":
+        raise ValueError("unknown optimizer")
+    return torch.optim.AdamW(parameters, **kwargs)
+
+
+def parax_learning_rate(base_lr, position, epochs, warmup_epochs, min_lr=0.0):
+    """Match the official iteration-based warmup/cosine formula using an absolute LR."""
+    if warmup_epochs and position < warmup_epochs:
+        return base_lr * position / warmup_epochs
+    progress = (position - warmup_epochs) / max(1, epochs - warmup_epochs)
+    return min_lr + (base_lr - min_lr) * 0.5 * (1 + math.cos(math.pi * min(1, progress)))
 
 
 def epoch_learning_rate(base_lr, epoch, epochs, warmup_epochs):

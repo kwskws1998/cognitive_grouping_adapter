@@ -79,6 +79,28 @@ def fetch_code_reference():
                                                        "executed": False, "license_checked": False})
 
 
+def fetch_parax_recipes():
+    """Archive official launcher text inside JSON without creating shell scripts."""
+    path = PROJECT_ROOT / "third_party" / "ParaX" / "LAUNCHER_EVIDENCE.json"
+    if path.exists():
+        record = json.loads(path.read_text())
+        if record["revision"] != PARAX_REVISION:
+            raise ValueError("launcher evidence revision differs")
+        import hashlib
+        for entry in record["launchers"]:
+            if hashlib.sha256(entry["content"].encode()).hexdigest() != entry["sha256"]:
+                raise ValueError("launcher evidence was modified")
+        return
+    import hashlib
+    launchers = []
+    for dataset in ("cifar100", "svhn", "food101"):
+        url = "https://raw.githubusercontent.com/LMMMEng/ParaX/" + PARAX_REVISION + "/image_classification/scripts/train_" + dataset + ".sh"
+        content = get(url).decode("utf-8")
+        launchers.append({"dataset": dataset, "url": url, "content": content,
+                          "sha256": hashlib.sha256(content.encode()).hexdigest()})
+    atomic_json(path, {"revision": PARAX_REVISION, "launchers": launchers, "executed": False})
+
+
 def main():
     """Fetch only explicitly requested sources, without running external code."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -89,6 +111,7 @@ def main():
         parser.error("choose --parax and/or --code-reference")
     if args.parax:
         fetch_parax()
+        fetch_parax_recipes()
     if args.code_reference:
         fetch_code_reference()
 
