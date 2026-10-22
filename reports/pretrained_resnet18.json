@@ -1,0 +1,42 @@
+{
+  "backbone_sha256": "d5b225d872194f14d21a24822d7dab46283006e50b7cc3c7478ca1ed15062d7b",
+  "checks": {
+    "adapter_down_changed": true,
+    "adapter_up_changed": true,
+    "backbone_eval_mode": true,
+    "backbone_gradients_absent": true,
+    "backbone_unchanged": true
+  },
+  "efficacy_established": false,
+  "environment": {
+    "cuda_available": false,
+    "cuda_runtime": null,
+    "gpu": null,
+    "packages": {
+      "Pillow": "11.3.0",
+      "numpy": "2.0.2",
+      "timm": "1.0.22",
+      "torch": "2.8.0",
+      "torchvision": "0.23.0"
+    },
+    "platform": "macOS-15.5-arm64-arm-64bit",
+    "python": "3.9.6"
+  },
+  "parameters": {
+    "adapter_trainable": 132672,
+    "backbone_total": 11176512,
+    "backbone_trainable": 0,
+    "head_trainable": 1539
+  },
+  "synthetic_losses": [
+    1.0760828256607056,
+    1.0462778806686401,
+    0.8514708280563354
+  ],
+  "validation_kind": "pretrained code-path smoke",
+  "weights": {
+    "architecture": "resnet18",
+    "pretrained": true,
+    "weights": "ResNet18_Weights.IMAGENET1K_V1"
+  }
+}

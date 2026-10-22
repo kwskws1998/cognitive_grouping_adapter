@@ -1,0 +1,19 @@
+{
+  "environment": {
+    "cuda_available": false,
+    "cuda_runtime": null,
+    "gpu": null,
+    "packages": {
+      "Pillow": "11.3.0",
+      "numpy": "2.0.2",
+      "timm": "1.0.22",
+      "torch": "2.8.0",
+      "torchvision": "0.23.0"
+    },
+    "platform": "macOS-15.5-arm64-arm-64bit",
+    "python": "3.9.6"
+  },
+  "measured": false,
+  "reason": "CUDA is not available",
+  "status": "unavailable"
+}

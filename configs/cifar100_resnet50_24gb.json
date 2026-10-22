@@ -1,0 +1,23 @@
+{
+  "backbone": "resnet50",
+  "pretrained": true,
+  "mode": "grouping",
+  "bottleneck": 64,
+  "grouping": {"radius": 2},
+  "dataset": "cifar100",
+  "data_root": "data",
+  "download": true,
+  "image_size": 224,
+  "validation_fraction": 0.1,
+  "split_seed": 1729,
+  "batch_size": 8,
+  "accumulation_steps": 8,
+  "epochs": 30,
+  "warmup_epochs": 3,
+  "learning_rate": 0.001,
+  "weight_decay": 0.01,
+  "workers": 4,
+  "precision": "bf16",
+  "device": "cuda",
+  "seed": 42
+}

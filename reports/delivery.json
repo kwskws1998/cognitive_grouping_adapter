@@ -1,0 +1,8 @@
+{
+  "destination": "/Users/wansookim/Documents/cognitive_grouping_adapter",
+  "source_sha256": "0ba8a46490bdc7bd05222657551e7f8601446368e74273c9cbfef3b0b23acaea",
+  "source_files_verified": 34,
+  "mae_checkpoint_verified": true,
+  "scratch_and_partial_data_copied": false,
+  "canonical_tests_and_pretrained_smokes_passed": true
+}

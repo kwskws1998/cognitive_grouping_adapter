@@ -1,0 +1,674 @@
+{
+  "human_fit_established": false,
+  "natural_image_efficacy_established": false,
+  "observations": [
+    {
+      "accuracy": 0.5,
+      "density": "alone",
+      "distant_similarity": 0.5,
+      "nearest_neighbors": "similar",
+      "nll": 0.7056606858968735,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.560632050037384,
+            0.43936800956726074
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5652586817741394,
+            0.43474140763282776
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5608597993850708,
+            0.4391402006149292
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5641262531280518,
+            0.43587377667427063
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5603311657905579,
+            0.43966883420944214
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5660589933395386,
+            0.43394097685813904
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5592264533042908,
+            0.44077354669570923
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.563788890838623,
+            0.43621107935905457
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "sparse",
+      "distant_similarity": 0.5,
+      "nearest_neighbors": "similar",
+      "nll": 0.7072427421808243,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5562760829925537,
+            0.4437238574028015
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5659760236740112,
+            0.43402397632598877
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5645754337310791,
+            0.4354245662689209
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.57381671667099,
+            0.4261833131313324
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5613204836845398,
+            0.4386795163154602
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5636003017425537,
+            0.4363997280597687
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5700386762619019,
+            0.42996129393577576
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5698055624961853,
+            0.4301944673061371
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "sparse",
+      "distant_similarity": 0.5,
+      "nearest_neighbors": "dissimilar",
+      "nll": 0.7016252875328064,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5622789859771729,
+            0.43772092461586
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5603981018066406,
+            0.4396018385887146
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5575172901153564,
+            0.44248270988464355
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5583686828613281,
+            0.4416313171386719
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5589433908462524,
+            0.44105660915374756
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5564804077148438,
+            0.443519651889801
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5564138889312744,
+            0.4435861110687256
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5651936531066895,
+            0.43480631709098816
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "dense",
+      "distant_similarity": 0.0,
+      "nearest_neighbors": "similar",
+      "nll": 0.7205105721950531,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6142880320549011,
+            0.3857119381427765
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5944241285324097,
+            0.40557584166526794
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.603900671005249,
+            0.39609935879707336
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6220502853393555,
+            0.37794971466064453
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5947404503822327,
+            0.4052595794200897
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6145429015159607,
+            0.38545703887939453
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6021212339401245,
+            0.3978787660598755
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6001853346824646,
+            0.3998146951198578
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "dense",
+      "distant_similarity": 0.5,
+      "nearest_neighbors": "similar",
+      "nll": 0.7255017757415771,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5951003432273865,
+            0.40489962697029114
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5928715467453003,
+            0.4071284830570221
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5933125615119934,
+            0.4066874086856842
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6158310770988464,
+            0.38416895270347595
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5780094861984253,
+            0.4219905436038971
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6191390752792358,
+            0.3808608651161194
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6194740533828735,
+            0.38052597641944885
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5995974540710449,
+            0.4004024863243103
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "dense",
+      "distant_similarity": 1.0,
+      "nearest_neighbors": "similar",
+      "nll": 0.7202100157737732,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5861706733703613,
+            0.41382932662963867
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.5964998006820679,
+            0.40350013971328735
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5902801752090454,
+            0.4097198247909546
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6012342572212219,
+            0.3987657427787781
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5919859409332275,
+            0.40801408886909485
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6001878380775452,
+            0.3998121917247772
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6045203804969788,
+            0.39547958970069885
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6050774455070496,
+            0.39492255449295044
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "dense",
+      "distant_similarity": 0.0,
+      "nearest_neighbors": "dissimilar",
+      "nll": 0.7183601558208466,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6253775954246521,
+            0.3746224045753479
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6076950430870056,
+            0.392304927110672
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6134282350540161,
+            0.3865717351436615
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6276246905326843,
+            0.37237536907196045
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6085071563720703,
+            0.3914928436279297
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6107334494590759,
+            0.38926663994789124
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6211055517196655,
+            0.37889450788497925
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6127671599388123,
+            0.38723281025886536
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "dense",
+      "distant_similarity": 0.5,
+      "nearest_neighbors": "dissimilar",
+      "nll": 0.7266058623790741,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6116166710853577,
+            0.38838332891464233
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6072309017181396,
+            0.39276912808418274
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6120871305465698,
+            0.3879128694534302
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.620918333530426,
+            0.379081666469574
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5934782028198242,
+            0.4065217673778534
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6198533177375793,
+            0.38014671206474304
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6256632804870605,
+            0.37433671951293945
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6201139092445374,
+            0.37988606095314026
+          ]
+        }
+      ],
+      "samples": 8
+    },
+    {
+      "accuracy": 0.5,
+      "density": "dense",
+      "distant_similarity": 1.0,
+      "nearest_neighbors": "dissimilar",
+      "nll": 0.7235865592956543,
+      "predictions": [
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.60288006067276,
+            0.3971199691295624
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6070070266723633,
+            0.3929930031299591
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6093773245811462,
+            0.390622615814209
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.614085853099823,
+            0.385914146900177
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.5982497930526733,
+            0.40175023674964905
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6085355877876282,
+            0.39146438241004944
+          ]
+        },
+        {
+          "label": 0,
+          "prediction": 0,
+          "probabilities": [
+            0.6139708757400513,
+            0.38602909445762634
+          ]
+        },
+        {
+          "label": 1,
+          "prediction": 0,
+          "probabilities": [
+            0.6178027391433716,
+            0.3821972608566284
+          ]
+        }
+      ],
+      "samples": 8
+    }
+  ],
+  "role": "development diagnostic",
+  "selected_epoch": 0
+}

@@ -1,0 +1,42 @@
+{
+  "system_site_packages": true,
+  "packages": [
+    {
+      "name": "cognitive-grouping-adapter",
+      "version": "0.1.0",
+      "editable_project_location": "/Users/wansookim/Documents/cognitive_grouping_adapter"
+    },
+    {
+      "name": "easydict",
+      "version": "1.13"
+    },
+    {
+      "name": "einops",
+      "version": "0.8.1"
+    },
+    {
+      "name": "numpy",
+      "version": "2.0.2"
+    },
+    {
+      "name": "pillow",
+      "version": "11.3.0"
+    },
+    {
+      "name": "safetensors",
+      "version": "0.7.0"
+    },
+    {
+      "name": "timm",
+      "version": "1.0.22"
+    },
+    {
+      "name": "torch",
+      "version": "2.8.0"
+    },
+    {
+      "name": "torchvision",
+      "version": "0.23.0"
+    }
+  ]
+}

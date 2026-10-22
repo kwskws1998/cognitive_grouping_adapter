@@ -1,0 +1,22 @@
+{
+  "backbone": "resnet18",
+  "pretrained": false,
+  "mode": "grouping",
+  "bottleneck": 8,
+  "grouping": {"radius": 1},
+  "dataset": "crowding",
+  "image_size": 64,
+  "train_samples": 16,
+  "val_samples": 8,
+  "test_samples": 8,
+  "batch_size": 3,
+  "accumulation_steps": 2,
+  "epochs": 2,
+  "warmup_epochs": 0,
+  "learning_rate": 0.001,
+  "workers": 0,
+  "threads": 2,
+  "precision": "fp32",
+  "device": "cpu",
+  "seed": 42
+}

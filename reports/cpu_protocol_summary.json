@@ -1,0 +1,58 @@
+{
+  "comparison_signature": {
+    "encoder": "f3dde7912fb8ee684862a17c812cef2e0adaede6f51f92d05ee4e00d77c289c9",
+    "normalization": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    },
+    "protocol": {
+      "accumulation_steps": 2,
+      "backbone": "resnet18",
+      "batch_size": 3,
+      "dataset": "crowding",
+      "device": "cpu",
+      "epochs": 2,
+      "image_size": 64,
+      "learning_rate": 0.001,
+      "precision": "fp32",
+      "pretrained": false,
+      "test_samples": 8,
+      "threads": 2,
+      "train_samples": 16,
+      "val_samples": 8,
+      "warmup_epochs": 0,
+      "workers": 0
+    },
+    "source": "0ba8a46490bdc7bd05222657551e7f8601446368e74273c9cbfef3b0b23acaea",
+    "split": "4783ee5f7383a8b75a9ebb24041ebf9b7e71f1fd92febe716017a9ca55f4ecb0"
+  },
+  "method_superiority_established": false,
+  "published_scores_included": false,
+  "role": "development validation",
+  "rows": [
+    {
+      "accuracy": 0.5,
+      "adapter_parameters": 17928,
+      "head_parameters": 1026,
+      "method_configuration": {
+        "bottleneck": 8,
+        "grouping": {
+          "radius": 1
+        }
+      },
+      "mode": "grouping",
+      "nll": 0.7318835258483887,
+      "run": "runs/cpu_validation",
+      "samples": 8,
+      "seed": 42
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "classification_efficacy_established": false,
+  "conditions": [
+    {
+      "center_private_fraction": 1.0,
+      "center_shared": 0.0,
+      "center_unique": 1.0,
+      "center_widths": [
+        1.25,
+        1.25,
+        1.25,
+        1.25
+      ],
+      "condition": "isolated"
+    },
+    {
+      "center_private_fraction": 0.01374735590070486,
+      "center_shared": 0.9862526655197144,
+      "center_unique": 0.01374735590070486,
+      "center_widths": [
+        1.25,
+        1.25,
+        1.25,
+        1.25
+      ],
+      "condition": "near same / far same"
+    },
+    {
+      "center_private_fraction": 0.1009693369269371,
+      "center_shared": 0.8990306854248047,
+      "center_unique": 0.1009693369269371,
+      "center_widths": [
+        0.3364187479019165,
+        0.3364187479019165,
+        0.3364187479019165,
+        0.3364187479019165
+      ],
+      "condition": "near other / far same"
+    },
+    {
+      "center_private_fraction": 0.021287739276885986,
+      "center_shared": 0.978712260723114,
+      "center_unique": 0.021287739276885986,
+      "center_widths": [
+        1.25,
+        1.25,
+        1.25,
+        1.25
+      ],
+      "condition": "near same / far other"
+    }
+  ],
+  "human_fit_established": false,
+  "kind": "constructed-feature mechanism observation",
+  "operator": {
+    "adaptive_width": true,
+    "eps": 1e-06,
+    "max_width": 1.25,
+    "min_width": 0.2,
+    "radius": 2,
+    "samples_per_cell": 2,
+    "similarity_temperature": 0.7
+  }
+}
