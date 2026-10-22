@@ -4,14 +4,14 @@ import argparse
 from dataclasses import asdict
 import random
 
-from _common import PROJECT_ROOT, read_config
+from _common import PROJECT_ROOT, read_config, validate_config
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
 from cog_grouping.backbones import make_backbone
 from cog_grouping.data import make_datasets
-from cog_grouping.engine import epoch_learning_rate, evaluate, precision_context, train_epoch
+from cog_grouping.engine import epoch_learning_rate, evaluate, make_optimizer, parax_learning_rate, precision_context, train_epoch
 from cog_grouping.grouping import GroupingConfig
 from cog_grouping.model import build_classifier
 from cog_grouping.provenance import atomic_json, atomic_torch_save, environment, seed_everything, seed_worker, source_fingerprint, state_fingerprint
@@ -45,6 +45,7 @@ def main():
     parser.add_argument("--seed", type=int)
     parser.add_argument("--device")
     parser.add_argument("--precision", choices=("fp32", "bf16", "fp16"))
+    parser.add_argument("--phase", choices=("development", "confirmation"))
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--epochs-this-invocation", type=int)
     parser.add_argument("--allow-random-backbone", action="store_true")
@@ -55,6 +56,11 @@ def main():
     for name in ("mode", "seed", "device", "precision"):
         if getattr(args, name) is not None:
             config[name] = getattr(args, name)
+    if args.phase:
+        config["phase"] = args.phase
+        if args.phase == "confirmation":
+            config["validation_fraction"] = 0.0
+    validate_config(config)
     if not config.get("pretrained", True) and not args.allow_random_backbone:
         parser.error("random backbones are smoke tests only; explicitly pass --allow-random-backbone")
     device_name = config.get("device", "auto")
@@ -85,10 +91,10 @@ def main():
     generator = torch.Generator().manual_seed(seed)
     options = {"batch_size": config["batch_size"], "num_workers": config.get("workers", 0),
                "pin_memory": device.type == "cuda", "worker_init_fn": seed_worker}
-    train_loader = DataLoader(training, shuffle=True, generator=generator, **options)
-    val_loader = DataLoader(validation, shuffle=False, **options)
-    optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad],
-                                  lr=config.get("learning_rate", 1e-3), weight_decay=config.get("weight_decay", 0.01))
+    train_loader = DataLoader(training, shuffle=True, generator=generator,
+                              drop_last=config.get("drop_last", False), **options)
+    val_loader = DataLoader(validation, shuffle=False, **options) if validation is not None else None
+    optimizer = make_optimizer(model, config)
     scaler = torch.amp.GradScaler("cuda", enabled=device.type == "cuda" and precision == "fp16")
     source = source_fingerprint(PROJECT_ROOT)
     manifest = {"config": config, "grouping_config": asdict(grouping_config), "num_classes": classes,
@@ -97,10 +103,11 @@ def main():
                 "backbone_sha256": backbone_hash, "parameters": model.trainable_parameter_counts(),
                 "frozen_model_sha256": frozen_start,
                 "split_sha256": split["sha256"], "source": source, "environment": environment(),
-                "test_accessed": False,
-                "protocol": ("full distributed official ParaX; harmonized pilot" if config.get("mode") == "official_parax"
+                "test_accessed": False, "effective_batch_size": config["batch_size"] * config.get("accumulation_steps", 1),
+                "checkpoint_selection": "validation_accuracy_then_nll" if val_loader is not None else "fixed_final_epoch",
+                "protocol": config.get("benchmark_protocol") or ("full distributed official ParaX; harmonized pilot" if config.get("mode") == "official_parax"
                              else "post-backbone single-module pilot; not published-score reproduction")}
-    first_epoch, best_accuracy, history = 0, -1.0, []
+    first_epoch, best_accuracy, best_nll, history = 0, -1.0, float("inf"), []
     if args.resume:
         saved = torch.load(output / "last.pt", map_location="cpu", weights_only=True)
         for key in ("config", "backbone_sha256", "frozen_model_sha256", "split_sha256", "source"):
@@ -110,6 +117,7 @@ def main():
         optimizer.load_state_dict(saved["optimizer"])
         scaler.load_state_dict(saved["scaler"])
         first_epoch, best_accuracy = saved["epoch"] + 1, saved["best_accuracy"]
+        best_nll = saved.get("best_nll", float("inf"))
         history = saved["history"]
         restore_rng(saved["rng"], generator)
     else:
@@ -122,15 +130,21 @@ def main():
                                   config["epochs"], config.get("warmup_epochs", 0))
         for group in optimizer.param_groups:
             group["lr"] = lr
+        schedule = (lambda progress: parax_learning_rate(config["learning_rate"], epoch + progress,
+                    config["epochs"], config.get("warmup_epochs", 0), config.get("min_lr", 0.0))) \
+                    if config.get("schedule") == "parax_iteration" else None
         train_result = train_epoch(model, train_loader, optimizer, device, precision,
                                     config.get("accumulation_steps", 1), scaler,
-                                    config.get("max_grad_norm", 1.0))
-        val_result = evaluate(model, val_loader, device, precision)
+                                    config.get("max_grad_norm", 1.0), schedule=schedule)
+        val_result = evaluate(model, val_loader, device, precision) if val_loader is not None else None
+        lr = optimizer.param_groups[0]["lr"]
         entry = {"epoch": epoch, "learning_rate": lr, "train": train_result, "validation": val_result}
         history.append(entry)
-        improved = val_result["accuracy"] > best_accuracy
-        best_accuracy = max(best_accuracy, val_result["accuracy"])
+        improved = val_result is None or (val_result["accuracy"], -val_result["nll"]) > (best_accuracy, -best_nll)
+        if val_result is not None and improved:
+            best_accuracy, best_nll = val_result["accuracy"], val_result["nll"]
         saved = {"epoch": epoch, "best_accuracy": best_accuracy, "model": model.trainable_state_dict(),
+                 "best_nll": best_nll if val_result is not None else None,
                  "optimizer": optimizer.state_dict(), "scaler": scaler.state_dict(),
                  "rng": rng_state(generator), "manifest": manifest, "history": history}
         atomic_torch_save(output / "last.pt", saved)
@@ -141,7 +155,9 @@ def main():
     final_hash = model.frozen_fingerprint()
     if final_hash != frozen_start:
         raise RuntimeError("frozen backbone changed during training")
-    atomic_json(output / "status.json", {"completed_epochs": len(history), "best_validation_accuracy": best_accuracy,
+    atomic_json(output / "status.json", {"completed_epochs": len(history), "best_validation_accuracy": best_accuracy if val_loader is not None else None,
+                                        "selected_epoch": (max(history, key=lambda row: (row["validation"]["accuracy"], -row["validation"]["nll"]))["epoch"]
+                                                           if val_loader is not None else history[-1]["epoch"]),
                                         "planned_epochs": config["epochs"], "complete": len(history) == config["epochs"],
                                         "backbone_unchanged": True, "test_accessed": False,
                                         "efficacy_established": False})

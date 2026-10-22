@@ -1,0 +1,27 @@
+{
+  "revision": "a1c4aa049b1d859db287535f3597b113ed01a2a4",
+  "launchers": [
+    {
+      "dataset": "cifar100",
+      "url": "https://github.com/LMMMEng/ParaX/blob/a1c4aa049b1d859db287535f3597b113ed01a2a4/image_classification/scripts/train_cifar100.sh",
+      "git_blob_sha": "757a4018fa1fce4f711d2826e00967d3f5afec8b",
+      "content": "#!/usr/bin/env bash\nset -euo pipefail\n\nSCRIPT_DIR=$(cd \"$(dirname \"$0\")\" && pwd)\nPROJECT_DIR=$(cd \"$SCRIPT_DIR/..\" && pwd)\nREPO_ROOT=$(cd \"$PROJECT_DIR/../..\" && pwd)\n\nNUM_GPUS=${NUM_GPUS:-4}\nPORT=${PORT:-29500}\nPRETRAINED=${PRETRAINED:-$REPO_ROOT/pretrained_models/mae_pretrain_vit_b.pth}\nCLS_DATA_ROOT=${CLS_DATA_ROOT:-$REPO_ROOT/data}\nOUTPUT_DIR=${OUTPUT_DIR:-$PROJECT_DIR/work_dirs/cifar100/parax}\n\npython -m torch.distributed.run \\\n  --nproc_per_node=\"$NUM_GPUS\" \\\n  --master_port=\"$PORT\" \\\n  \"$PROJECT_DIR/main_image_parax.py\" \\\n  --batch_size 256 \\\n  --cls_token \\\n  --finetune \"$PRETRAINED\" \\\n  --dist_eval \\\n  --data_path \"$CLS_DATA_ROOT\" \\\n  --output_dir \"$OUTPUT_DIR\" \\\n  --drop_path 0.0 \\\n  --parax_enable_conv \\\n  --parax_kernel_sizes \"(3, 5, 7)\" \\\n  --parax_router_hidden 16 \\\n  --blr 0.1 \\\n  --dataset cifar100 \\\n  \"$@\"",
+      "sha256": "a315fe49589abc860372d4ffdeae77c7bde4b7024613307d850833ca3e30728f"
+    },
+    {
+      "dataset": "svhn",
+      "url": "https://github.com/LMMMEng/ParaX/blob/a1c4aa049b1d859db287535f3597b113ed01a2a4/image_classification/scripts/train_svhn.sh",
+      "git_blob_sha": "201af64977b6cf1bd478170988d89d31bb136b8a",
+      "content": "#!/usr/bin/env bash\nset -euo pipefail\n\nSCRIPT_DIR=$(cd \"$(dirname \"$0\")\" && pwd)\nPROJECT_DIR=$(cd \"$SCRIPT_DIR/..\" && pwd)\nREPO_ROOT=$(cd \"$PROJECT_DIR/../..\" && pwd)\n\nNUM_GPUS=${NUM_GPUS:-4}\nPORT=${PORT:-29500}\nPRETRAINED=${PRETRAINED:-$REPO_ROOT/pretrained_models/mae_pretrain_vit_b.pth}\nCLS_DATA_ROOT=${CLS_DATA_ROOT:-$REPO_ROOT/data}\nOUTPUT_DIR=${OUTPUT_DIR:-$PROJECT_DIR/work_dirs/svhn/parax}\n\npython -m torch.distributed.run \\\n  --nproc_per_node=\"$NUM_GPUS\" \\\n  --master_port=\"$PORT\" \\\n  \"$PROJECT_DIR/main_image_parax.py\" \\\n  --batch_size 256 \\\n  --cls_token \\\n  --finetune \"$PRETRAINED\" \\\n  --dist_eval \\\n  --data_path \"$CLS_DATA_ROOT\" \\\n  --output_dir \"$OUTPUT_DIR\" \\\n  --drop_path 0.0 \\\n  --parax_enable_conv \\\n  --parax_kernel_sizes \"(3, 5, 7)\" \\\n  --parax_router_hidden 16 \\\n  --blr 0.1 \\\n  --dataset svhn \\\n  \"$@\"",
+      "sha256": "3fd56e3a0c08694a2790e579e68e7138c1b730c4f2388372ecde31edd4d5efb8"
+    },
+    {
+      "dataset": "food101",
+      "url": "https://github.com/LMMMEng/ParaX/blob/a1c4aa049b1d859db287535f3597b113ed01a2a4/image_classification/scripts/train_food101.sh",
+      "git_blob_sha": "b233f088923f646b186f2614b04ed2ca555583cb",
+      "content": "#!/usr/bin/env bash\nset -euo pipefail\n\nSCRIPT_DIR=$(cd \"$(dirname \"$0\")\" && pwd)\nPROJECT_DIR=$(cd \"$SCRIPT_DIR/..\" && pwd)\nREPO_ROOT=$(cd \"$PROJECT_DIR/../..\" && pwd)\n\nNUM_GPUS=${NUM_GPUS:-4}\nPORT=${PORT:-29500}\nPRETRAINED=${PRETRAINED:-$REPO_ROOT/pretrained_models/mae_pretrain_vit_b.pth}\nCLS_DATA_ROOT=${CLS_DATA_ROOT:-$REPO_ROOT/data}\nOUTPUT_DIR=${OUTPUT_DIR:-$PROJECT_DIR/work_dirs/food101/parax}\n\npython -m torch.distributed.run \\\n  --nproc_per_node=\"$NUM_GPUS\" \\\n  --master_port=\"$PORT\" \\\n  \"$PROJECT_DIR/main_image_parax.py\" \\\n  --batch_size 256 \\\n  --cls_token \\\n  --finetune \"$PRETRAINED\" \\\n  --dist_eval \\\n  --data_path \"$CLS_DATA_ROOT\" \\\n  --output_dir \"$OUTPUT_DIR\" \\\n  --drop_path 0.05 \\\n  --parax_enable_conv \\\n  --parax_kernel_sizes \"(3, 5, 7)\" \\\n  --parax_router_hidden 16 \\\n  --blr 0.1 \\\n  --dataset food101 \\\n  \"$@\"",
+      "sha256": "09351badf1a66d342e4c758f6ee8e7679a25edc909b214550b9f47e6e6a3cb11"
+    }
+  ],
+  "executed": false
+}

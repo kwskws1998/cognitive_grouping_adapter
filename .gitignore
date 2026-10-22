@@ -6,3 +6,4 @@ checkpoints/
 third_party/
 runs/
 *.pyc
+environment.resolved.txt

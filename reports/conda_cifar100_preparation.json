@@ -1,0 +1,13 @@
+{
+  "archive": {
+    "official_md5_checked_by_torchvision": "eb9058c3a382ffc7106e4002c42a8d85",
+    "requested_mirror_url": "https://dataset.bj.bcebos.com/cifar/cifar-100-python.tar.gz",
+    "sha256": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "classes": 100,
+  "dataset": "cifar100",
+  "final_test_constructed": false,
+  "train_samples": 45000,
+  "validation_samples": 5000,
+  "split_sha256": "f60796e38cbec029dd465bf51a3e4f96c143150ad3635b77f91386904fd17bdf"
+}

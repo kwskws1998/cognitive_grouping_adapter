@@ -27,14 +27,14 @@ Pinned commit: `a1c4aa049b1d859db287535f3597b113ed01a2a4`.
 
 `scripts/fetch_references.py --parax` downloads immutable Python sources and the Apache-2.0 license, records SHA-256 per file, and does not execute them. The bridge checks hashes before import. Vendor code is not restyled or edited.
 
-The bridge retains all 12 official ParaX blocks and the shared parameter experts. It does not move ParaX to a single output location. The classification bridge disables the optional spatial-convolution path and uses rank 192, reporting the actual trainable parameter count.
+The bridge retains all 12 official ParaX blocks and shared parameter experts. It does not move ParaX to a single output location. The primary benchmark now uses rank 128 and enables convolution kernels 3/5/7, matching the checked-in official classification launchers. The old rank-192, convolution-disabled settings remain available only through legacy pilot configurations. All budgets are counted from the constructed model.
 
 MAE/timm checkpoints pack Q/K/V together and nest MLP layers. The official class uses separate Q/K/V names and flattened MLP names. The bridge explicitly translates them and rejects unexpected/missing frozen keys. It must not initialize missing attention weights randomly and train them under the name of an adapter. An independent tiny-model test verifies the translated frozen core against timm when ParaX updates are neutralized.
 
-## Harmonized pilot, not published-score reproduction
+## Matched and reference benchmark recipes
 
-For isolation, the bridge uses the same normalized patch-mean linear readout as our local methods, the same training-pool validation split, the same optimizer and the same augmentation. The published official trainer has its own readout, optimizer, preprocessing and evaluation recipe. We do not claim published scores were reproduced, and paper-table numbers must not be placed beside our pilot numbers as if matched.
+The matched recipe uses the same normalized patch-mean linear readout, training-pool validation split, SGD and official-source preprocessing for all methods. The separate reference recipe retains the official CLS + BatchNorm head, FP32, SGD, convolution paths and source stochastic-layer behavior. Exact settings and differences are recorded in BENCHMARK_PROTOCOL.md. Published scores must not be placed beside observed runs as if matched.
 
-Preserve a separate official-protocol reproduction when reporting strong-benchmark results. Before a paper claim, tune the harmonized ParaX baseline with a comparable validation search budget; add the original readout/SGD recipe as a strength check. Our current pilot defaults alone do not establish superiority over the strongest tuned ParaX condition.
+Tune each method with the same validation-only LR/seed search grid. Freezing rejects unequal budgets and prior final-test access. The reference recipe is a single-GPU strength check: gradient accumulation preserves effective batch but does not reproduce the official per-device BatchNorm statistics. Exact multi-GPU score reproduction remains a separate experiment.
 
 The single adapter and distributed ParaX differ in placement, parameter count and activation-memory needs. Report all three rather than attributing a difference only to cognition.

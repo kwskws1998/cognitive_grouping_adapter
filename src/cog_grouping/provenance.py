@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import platform
 import random
+import sys
 import tempfile
 from typing import Any
 
@@ -76,6 +77,10 @@ def environment():
         except importlib.metadata.PackageNotFoundError:
             versions[package] = None
     return {"python": platform.python_version(), "platform": platform.platform(),
+            "python_executable": sys.executable, "conda_prefix": os.environ.get("CONDA_PREFIX"),
+            "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+            "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+            "deterministic_warn_only": torch.is_deterministic_algorithms_warn_only_enabled(),
             "packages": versions, "cuda_available": torch.cuda.is_available(),
             "cuda_runtime": torch.version.cuda,
             "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}
@@ -83,6 +88,7 @@ def environment():
 
 def seed_everything(seed: int):
     """Control Python, NumPy, CPU and CUDA sampling; deterministic kernels are requested."""
+    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -90,7 +96,7 @@ def seed_everything(seed: int):
         torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
-    torch.use_deterministic_algorithms(True, warn_only=True)
+    torch.use_deterministic_algorithms(True)
 
 
 def seed_worker(worker_id):

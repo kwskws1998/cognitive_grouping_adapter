@@ -22,7 +22,7 @@ def main():
                 raise ValueError("owned code uses inline comments: " + str(path))
             checked.append(str(path.relative_to(PROJECT_ROOT)))
     configurations = []
-    for path in sorted((PROJECT_ROOT / "configs").glob("*.json")):
+    for path in sorted((PROJECT_ROOT / "configs").rglob("*.json")):
         read_config(path)
         configurations.append(str(path.relative_to(PROJECT_ROOT)))
     report = {"syntax_ok": True, "inline_comment_count": 0, "python_files": checked,
